@@ -1,0 +1,39 @@
+"A schema GraphQL untuk mengelola transaksi tiket konser/event"
+
+type Order {
+    id: ID!
+    user_id: Int!
+    event_id: Int!
+    quantity: Int!
+    total_price: Float!
+    status: String!
+    created_at: String!
+    updated_at: String!
+}
+
+type Query {
+    # 1. Mendapatkan semua riwayat transaksi tiket
+    orders: [Order!]! @all
+
+    # 2. Mendapatkan detail 1 transaksi berdasarkan ID transaksi
+    order(id: ID! @eq): Order @find
+
+    # 3. Mendapatkan riwayat belanja tiket khusus untuk 1 User ID tertentu (Efisien untuk mobile/gateway)
+    getOrdersByUser(user_id: Int! @eq): [Order!]! @all
+}
+
+type Mutation {
+    # 1. Membuat pesanan tiket baru (Status otomatis PENDING)
+    createOrder(
+        user_id: Int!
+        event_id: Int!
+        quantity: Int!
+        total_price: Float!
+    ): Order! @create
+
+    # 2. Mengubah status transaksi (Misal dari PENDING menjadi PAID atau FAILED)
+    updateOrderStatus(
+        id: ID!
+        status: String!
+    ): Order! @update
+}

@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # 1. Container untuk Aplikasi Laravel Kamu
+  app-order:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db-order
+      - redis-broker
+
+  # 2. Container untuk Database MySQL (Khusus Service Order)
+  db-order:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: db_order_payment
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data_order:/var/lib/mysql
+
+  # 3. Container untuk Message Broker (Redis)
+  redis-broker:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+volumes:
+  db_data_order:
