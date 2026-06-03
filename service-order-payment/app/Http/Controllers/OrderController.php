@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Redis;
 
 class OrderController extends Controller
 {
@@ -23,10 +24,10 @@ class OrderController extends Controller
             'total_price' => 'required|numeric',
         ])->validate();
 
-        // 3. 🎯 AMANKAN USER_ID & EVENT_ID: Menyisipkan dummy user_id agar lolos validasi NOT NULL MySQL
+        // 3. AMANKAN USER_ID & EVENT_ID: Menyisipkan dummy user_id agar lolos validasi NOT NULL MySQL
         $orderId = DB::table('orders')->insertGetId([
-            'user_id'     => 1,                       // <--- Dummy user_id untuk bypass validasi tabel kelompokmu
-            'event_id'    => $validated['ticket_id'], // <--- Menyelaraskan nama kolom database
+            'user_id'     => 1,                       // Dummy user_id untuk bypass validasi tabel kelompokmu
+            'event_id'    => $validated['ticket_id'], // Menyelaraskan nama kolom database
             'quantity'    => $validated['quantity'],
             'total_price' => $validated['total_price'],
             'status'      => 'pending',
@@ -34,14 +35,26 @@ class OrderController extends Controller
             'updated_at'  => now(),
         ]);
 
-        // 4. Kembalikan output sesuai struktur OrderOutput milik Hasura Valdo
+        // 4. 🎯 TRIGGER EVENT BROKER: Bungkus data transaksi untuk dilempar ke Redis Broker
+        $eventData = [
+            'order_id'    => $orderId,
+            'ticket_id'   => (int)$validated['ticket_id'],
+            'quantity'    => (int)$validated['quantity'],
+            'total_price' => (float)$validated['total_price'],
+            'status'      => 'pending'
+        ];
+
+        // Melempar bungkusan JSON ke channel broker bernama 'order-created'
+        Redis::publish('order-created', json_encode($eventData));
+
+        // 5. Kembalikan output sesuai struktur OrderOutput milik Hasura Valdo
         return response()->json([
             'id'          => $orderId,
             'ticket_id'   => (int)$validated['ticket_id'],
             'quantity'    => (int)$validated['quantity'],
             'total_price' => (float)$validated['total_price'],
             'status'      => 'pending',
-            'message'     => 'Order Tiket Mentality Berhasil Dibuat!'
+            'message'     => 'Order Dibuat & Event Berhasil Dikirim ke Redis Broker!'
         ], 201);
     }
 }
