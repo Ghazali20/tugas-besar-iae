@@ -1,0 +1,28 @@
+
+services:
+  # Container Aplikasi Laravel milik Rafli
+  app-event:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8000"  # <-- Port eksternal 8001 agar tidak tabrakan dengan port 8000 milik Jeje
+    volumes:
+      - .:/var/www/html
+    depends_on:
+      - db-event
+
+  # Container Database MySQL Khusus Service Event
+  db-event:
+    image: mysql:8.0
+    restart: always
+    environment:
+      MYSQL_DATABASE: db_event_ticket
+      MYSQL_ROOT_PASSWORD: root_password_rafli
+    ports:
+      - "3308:3306"  # <-- Port eksternal 3308 agar tidak tabrakan dengan port database kamu
+    volumes:
+      - db_data_event:/var/lib/mysql
+
+volumes:
+  db_data_event:
