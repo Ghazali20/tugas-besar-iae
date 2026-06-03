@@ -1,20 +1,18 @@
-version: '3.8'
-
 services:
-  # 1. Container untuk Aplikasi Laravel Kamu
+  # 1. Container untuk Aplikasi Laravel Kamu (Port Luar: 8002)
   app-order:
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "8002:8000"         # <--- Diubah agar luar ketuk 8002, masuk ke dalam port 8000
     volumes:
       - .:/var/www/html
     depends_on:
       - db-order
       - redis-broker
 
-  # 2. Container untuk Database MySQL (Khusus Service Order)
+  # 2. Container untuk Database MySQL (Port Luar: 3309)
   db-order:
     image: mysql:8.0
     restart: always
@@ -22,7 +20,7 @@ services:
       MYSQL_DATABASE: db_order_payment
       MYSQL_ROOT_PASSWORD: root_password
     ports:
-      - "3306:3306"
+      - "3309:3306"         # <--- Diubah ke 3309 agar tidak bentrok dengan MySQL bawaan laptop / Rafli
     volumes:
       - db_data_order:/var/lib/mysql
 
