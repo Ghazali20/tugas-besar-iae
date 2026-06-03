@@ -1,0 +1,35 @@
+services:
+  # Mesin Utama Hasura GraphQL Engine
+  graphql-engine:
+    image: hasura/graphql-engine:v2.40.0
+    ports:
+      - "8080:8080"  # <-- Console Hasura bisa diakses di localhost:8080
+    restart: always
+    environment:
+      ## Metadata internal Hasura disimpan di PostgreSQL bawaan container ini
+      HASURA_GRAPHQL_METADATA_DATABASE_URL: postgres://hasura:hasura_password_valdo@hasura-db:5432/hasura_metadata
+      
+      ## Aktifkan konsol admin hasura
+      HASURA_GRAPHQL_ENABLE_CONSOLE: "true"
+      
+      ## Password admin console Hasura (Ganti/amankan kalau perlu)
+      HASURA_GRAPHQL_ADMIN_SECRET: admin_secret_kelompok_mentality
+      
+      ## Izinkan playground diakses secara publik untuk testing awal dev
+      HASURA_GRAPHQL_DEV_MODE: "true"
+    depends_on:
+      - hasura-db
+
+  # Database PostgreSQL Khusus untuk Menyimpan Metadata internal Hasura
+  hasura-db:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: hasura
+      POSTGRES_PASSWORD: hasura_password_valdo
+      POSTGRES_DB: hasura_metadata
+    volumes:
+      - hasura_metadata_data:/var/lib/postgresql/data
+
+volumes:
+  hasura_metadata_data:
